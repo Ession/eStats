@@ -9,7 +9,7 @@
 --       Revision:  none
 --
 --         Author:  Mathias Jost (mail@mathiasjost.com)
---  				
+--					
 --		   Edited:  Lars Thevißen
 -- =============================================================================
 
@@ -103,9 +103,7 @@ local eStats = CreateFrame("Frame")
 -- -----------------------------------------------------------------------------
 -- Register event
 -- -----------------------------------------------------------------------------
-eStats:RegisterEvent("PLAYER_MONEY")
 eStats:RegisterEvent("VARIABLES_LOADED")
-eStats:RegisterEvent("PLAYER_LOGIN")
 
 
 -- -----------------------------------------------------------------------------
@@ -149,14 +147,7 @@ eStats:SetScript("OnUpdate", function(self, elapsed)
     fps         = floor(GetFramerate())
     ping        = select(3, GetNetStats())
 
-    -- build the money string
-    if GetMoney() >= 10000 then
-      money = FormatMoney(GetMoney(), "gold") .." ".. FormatMoney(GetMoney(), "silver") .." ".. FormatMoney(GetMoney(), "copper")
-    elseif GetMoney() >= 100 then
-      money = FormatMoney(GetMoney(), "silver") .." ".. FormatMoney(GetMoney(), "copper")
-    else
-      money = FormatMoney(GetMoney(), "copper")
-    end
+
 
     -- get memory usage
     memory = collectgarbage("count")
@@ -167,9 +158,6 @@ eStats:SetScript("OnUpdate", function(self, elapsed)
 
     -- set the stats text
     eStatsStatsText:SetText(ping.." ms  "..fps.." fps  "..memory)
-
-    -- set the money text
-    eStatsMoneyText:SetText(money)
 	
     -- reset the timer for the next update
     timer = 0
@@ -231,14 +219,23 @@ eStatsMoneyText:SetFont("Interface\\AddOns\\eStats\\font.ttf", 14, "THINOUTLINE"
 eStatsMoneyText:SetTextColor(1, 1, 1)
 
 eStatsMoney:RegisterEvent("PLAYER_MONEY")
+eStatsMoney:RegisterEvent("PLAYER_LOGIN")
 eStatsMoney:SetScript("OnEvent", function(self, event, ...)
-
+	-- build the money string
+    if GetMoney() >= 10000 then
+      money = FormatMoney(GetMoney(), "gold") .." ".. FormatMoney(GetMoney(), "silver") .." ".. FormatMoney(GetMoney(), "copper")
+    elseif GetMoney() >= 100 then
+      money = FormatMoney(GetMoney(), "silver") .." ".. FormatMoney(GetMoney(), "copper")
+    else
+      money = FormatMoney(GetMoney(), "copper")
+    end
+	-- set the money text
+    eStatsMoneyText:SetText(money)
 end)
 -- -----------------------------------------------------------------------------
 -- Create experience text frame
 -- -----------------------------------------------------------------------------
 
-print(playerlevel)
 if playerlevel < 90 then
 	local eStatsExp = CreateFrame("Button",  "eStatsExp", UIParent)
 	eStatsExp:SetFrameLevel(3)
