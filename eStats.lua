@@ -9,7 +9,8 @@
 --       Revision:  none
 --
 --         Author:  Mathias Jost (mail@mathiasjost.com)
---
+--  				
+--		   Edited:  Lars Thevißen
 -- =============================================================================
 
 
@@ -32,10 +33,18 @@ local nr
 local memory
 local cpu
 local playername    = UnitName("player")
+local playerlevel	= UnitLevel("player")
+local playerxp		= UnitXP("player")
+local playermaxxp	= UnitXPMax("player")
+local xppercent		= 0
 local realmname     = GetRealmName()
 local scriptProfile = GetCVar("scriptProfile")
 
 
+	
+function round(number, decimals)
+    return (("%%.%df"):format(decimals)):format(number)
+end
 -- -----------------------------------------------------------------------------
 -- function intended to format a simple integer value into a currency string
 -- -----------------------------------------------------------------------------
@@ -106,22 +115,24 @@ eStats:SetScript("OnEvent", function(self, event, ...)
 
   if event == "VARIABLES_LOADED" then
 
-    if not eStatsDB or not eStatsDB.Money or not eStatsDB.Money.Realm then
+    if not eStatsDB then
       eStatsDB = {
-        Money = {
-          Realm = {},
-        }
       }
     end
 
-    if not eStatsDB.Money.Realm[realmname] then
-      eStatsDB.Money.Realm[realmname] = {}
+    if not eStatsDB[realmname] then
+      eStatsDB[realmname] = {}
     end
+	
+	if not eStatsDB[realmname][playername] then
+		eStatsDB[realmname][playername] = {}
+	end
 
   end
 
-  eStatsDB.Money.Realm[realmname][playername] = GetMoney()
-
+  eStatsDB[realmname][playername].Gold = GetMoney()
+  eStatsDB[realmname][playername].Valor = select(2, GetCurrencyInfo(396))
+  eStatsDB[realmname][playername].ValorWeek = select(4, GetCurrencyInfo(396))
 end)
 
 
@@ -159,8 +170,8 @@ eStats:SetScript("OnUpdate", function(self, elapsed)
 
     -- set the money text
     eStatsMoneyText:SetText(money)
-
-    -- reset the timer for the enxt update
+	
+    -- reset the timer for the next update
     timer = 0
   end
 
@@ -172,16 +183,21 @@ end)
 -- -----------------------------------------------------------------------------
 local eStatsClock = CreateFrame("Frame", "eStatsClock", UIParent)
 eStatsClock:SetFrameLevel(3)
-eStatsClock:SetWidth(150)
-eStatsClock:SetHeight(30)
-eStatsClock:SetPoint("TOPLEFT", 16, -156)
+eStatsClock:SetWidth(50)
+eStatsClock:SetHeight(15)
+eStatsClock:SetPoint("BOTTOMRIGHT", 0, 0)
 eStatsClock:Show()
 
 eStatsClockText = eStatsClock:CreateFontString(nil, "OVERLAY")
 eStatsClockText:SetPoint("CENTER")
-eStatsClockText:SetFont("Interface\\AddOns\\eStats\\font.ttf", 14)
+eStatsClockText:SetFont("Interface\\AddOns\\eStats\\font.ttf", 14, "THINOUTLINE")
 eStatsClockText:SetTextColor(1, 1, 1)
 
+eStatsClock:SetScript("OnMouseUp", function(self, btn)
+	if btn == ("LeftButton") then
+		GameTimeFrame:Click()
+	end
+end)
 
 -- -----------------------------------------------------------------------------
 -- Create Stats text frame
@@ -189,13 +205,13 @@ eStatsClockText:SetTextColor(1, 1, 1)
 local eStatsStats = CreateFrame("Button",  "eStatsStats", UIParent)
 eStatsStats:SetFrameLevel(3)
 eStatsStats:SetWidth(150)
-eStatsStats:SetHeight(30)
-eStatsStats:SetPoint("TOPLEFT", 16, -186)
+eStatsStats:SetHeight(15)
+eStatsStats:SetPoint("BOTTOMRIGHT", -50, 0)
 eStatsStats:Show()
 
 eStatsStatsText = eStatsStats:CreateFontString(nil, "OVERLAY")
 eStatsStatsText:SetPoint("CENTER")
-eStatsStatsText:SetFont("Interface\\AddOns\\eStats\\font.ttf", 14)
+eStatsStatsText:SetFont("Interface\\AddOns\\eStats\\font.ttf", 14, "THINOUTLINE")
 eStatsStatsText:SetTextColor(1, 1, 1)
 
 
@@ -204,15 +220,52 @@ eStatsStatsText:SetTextColor(1, 1, 1)
 -- -----------------------------------------------------------------------------
 local eStatsMoney = CreateFrame("Button",  "eStatsMoney", UIParent)
 eStatsMoney:SetFrameLevel(3)
-eStatsMoney:SetWidth(150)
-eStatsMoney:SetHeight(30)
-eStatsMoney:SetPoint("TOPLEFT", 16, -216)
+eStatsMoney:SetWidth(100)
+eStatsMoney:SetHeight(15)
+eStatsMoney:SetPoint("BOTTOMRIGHT", -200, 0)
 eStatsMoney:Show()
 
 eStatsMoneyText = eStatsMoney:CreateFontString(nil, "OVERLAY")
 eStatsMoneyText:SetPoint("CENTER")
-eStatsMoneyText:SetFont("Interface\\AddOns\\eStats\\font.ttf", 14)
+eStatsMoneyText:SetFont("Interface\\AddOns\\eStats\\font.ttf", 14, "THINOUTLINE")
 eStatsMoneyText:SetTextColor(1, 1, 1)
+
+eStatsMoney:RegisterEvent("PLAYER_MONEY")
+eStatsMoney:SetScript("OnEvent", function(self, event, ...)
+
+end)
+-- -----------------------------------------------------------------------------
+-- Create experience text frame
+-- -----------------------------------------------------------------------------
+
+print(playerlevel)
+if playerlevel < 90 then
+	local eStatsExp = CreateFrame("Button",  "eStatsExp", UIParent)
+	eStatsExp:SetFrameLevel(3)
+	eStatsExp:SetWidth(100)
+	eStatsExp:SetHeight(15)
+	eStatsExp:SetPoint("BOTTOMRIGHT", -300, 0)
+	eStatsExp:Show()
+
+	eStatsExpText = eStatsExp:CreateFontString(nil, "OVERLAY")
+	eStatsExpText:SetPoint("CENTER")
+	eStatsExpText:SetFont("Interface\\AddOns\\eStats\\font.ttf", 14, "THINOUTLINE")
+	eStatsExpText:SetTextColor(1, 1, 1)
+
+	eStatsExp:RegisterEvent("PLAYER_XP_UPDATE")
+	eStatsExp:RegisterEvent("PLAYER_LOGIN")
+
+eStatsExp:SetScript("OnEvent", function(self, event, ...)
+	-- if playerlevel == 90 then
+		-- eStatsExp:Hide()	
+	-- else
+		playerxp = UnitXP("player")
+		playermaxxp	= UnitXPMax("player")
+		xppercent = round(100*playerxp/playermaxxp, 2)
+		eStatsExpText:SetText(xppercent.."%")
+	-- end
+end)
+end
 
 
 -- -----------------------------------------------------------------------------
@@ -338,21 +391,21 @@ eStatsMoney:SetScript("OnEnter", function(self, motion)
   self.tooltip = tooltip
 
   -- Add an header
-  tooltip:AddHeader("Character")
+  tooltip:AddHeader("Character", "Gold", "Valor")
   tooltip:AddSeparator()
 
   -- reset totals to zero
   total = 0
 
   -- add the characters and their amounts
-  for name, amount in pairs(eStatsDB.Money.Realm[realmname]) do
-    tooltip:AddLine(name, FormatMoney(amount, "gold"), FormatMoney(amount, "silver"), FormatMoney(amount, "copper"))
-    total = total + amount
+  for name, player in pairs(eStatsDB[realmname]) do
+    tooltip:AddLine(name, FormatMoney(player.Gold, "gold"), player.Valor.."("..player.ValorWeek..")")
+    total = total + player.Gold
   end
 
   -- add the totals
   tooltip:AddSeparator()
-  tooltip:AddLine("Total", FormatMoney(total, "gold"), FormatMoney(total, "silver"), FormatMoney(total, "copper"))
+  tooltip:AddLine("Total", FormatMoney(total, "gold"))
 
   -- Use smart anchoring code to anchor the tooltip to our frame
   tooltip:SmartAnchorTo(self)
