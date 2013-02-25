@@ -4,7 +4,7 @@
 --
 --    Description:  Status texts like fps, ping, time etc.
 --
---        Version:  5.0.2
+--        Version:  5.2.1
 --        Created:  Mon Nov 02 16:47:25 CET 2009
 --       Revision:  none
 --
@@ -106,21 +106,21 @@ eStats:SetScript("OnEvent", function(self, event, ...)
 
   if event == "VARIABLES_LOADED" then
 
-    if not eStatsDB or not eStatsDB.Money or not eStatsDB.Money.Realm then
-      eStatsDB = {
-        Money = {
-          Realm = {},
-        }
-      }
+    if not eStatsDB then
+      eStatsDB = {}
     end
 
-    if not eStatsDB.Money.Realm[realmname] then
-      eStatsDB.Money.Realm[realmname] = {}
+    if not eStatsDB[realmname] then
+      eStatsDB[realmname] = {}
     end
 
+    if not eStatsDB[realmname][playername] then
+      eStatsDB[realmname][playername] = {}
+    end
+          
   end
 
-  eStatsDB.Money.Realm[realmname][playername] = GetMoney()
+  eStatsDB[realmname][playername].Money = GetMoney()
 
 end)
 
@@ -345,9 +345,9 @@ eStatsMoney:SetScript("OnEnter", function(self, motion)
   total = 0
 
   -- add the characters and their amounts
-  for name, amount in pairs(eStatsDB.Money.Realm[realmname]) do
-    tooltip:AddLine(name, FormatMoney(amount, "gold"), FormatMoney(amount, "silver"), FormatMoney(amount, "copper"))
-    total = total + amount
+  for name, data in pairs(eStatsDB[realmname]) do
+    tooltip:AddLine(name, FormatMoney(data.Money, "gold"), FormatMoney(data.Money, "silver"), FormatMoney(data.Money, "copper"))
+    total = total + data.Money
   end
 
   -- add the totals
