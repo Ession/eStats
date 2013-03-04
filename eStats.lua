@@ -29,7 +29,6 @@ local addon  = {}
 local memtotal
 local cputotal
 local nr
-local memory
 local cpu
 local playername    = UnitName("player")
 local realmname     = GetRealmName()
@@ -39,17 +38,25 @@ local scriptProfile = GetCVar("scriptProfile")
 -- -----------------------------------------------------------------------------
 -- function intended to format a simple integer value into a currency string
 -- -----------------------------------------------------------------------------
-function FormatMoney(value, coin)
-  if coin == "gold" and value >= 10000 then
-    local gold = abs(value / 10000)
-    return format("|cff%s%s%d|r|cff%s%s|r", "ffffff", "", gold, "ffd700", "g")
-  elseif coin == "silver" and value >= 100 then
-    local silver = abs(mod((value / 100), 100))
-    return format("|cff%s%s%d|r|cff%s%s|r", "ffffff", "", silver, "c7c7cf", "s")
-  elseif coin == "copper" then
-    local copper = abs(mod(value, 100))
-    return format("|cff%s%s%d|r|cff%s%s|r", "ffffff", "", copper, "eda55f", "c")
+local function FormatMoney(value)
+  if value >= 10000 then
+    value = abs(value / 10000)
+    return format("|cff%s%s%d|r|cff%s%s|r", "ffffff", "", value, "ffd700", "g")
+  elseif value >= 100 then
+    value = abs(mod((value / 100), 100))
+    return format("|cff%s%s%d|r|cff%s%s|r", "ffffff", "", value, "c7c7cf", "s")
+  else
+    value = abs(mod(value, 100))
+    return format("|cff%s%s%d|r|cff%s%s|r", "ffffff", "", value, "eda55f", "c")
   end
+end
+
+
+-- -----------------------------------------------------------------------------
+-- function intended to format 2 integers into a formatted string
+-- -----------------------------------------------------------------------------
+local function FormatValor(current, weekly)
+  return format("%d (%d)", current, weekly)
 end
 
 
@@ -78,6 +85,24 @@ end
 
 
 -- -----------------------------------------------------------------------------
+-- returns the number of seconds since the last weekly valor cap reset
+-- -----------------------------------------------------------------------------
+local function timeSinceValorCapReset()
+  -- this array/table hekps us to calculate how 
+  -- many days it has been since the last reset
+  local daysSinceReset = { 4, 5, 6, 0, 1, 2, 3 }
+
+  -- calculates how many seconds have passed since midnight
+  local secondsSinceMidnight = date("%H") * 3600 + date("%M") * 60 + date("%S")
+
+  -- we take the days since the last reset and the seconds 
+  -- since midnight and add them up, then we substract 10800 
+  -- because the valor reset is at 3am, not at midnight
+  return daysSinceReset[date("%w")+1] * 86400 + secondsSinceMidnight - 10800
+end
+
+
+-- -----------------------------------------------------------------------------
 -- table ordering
 -- -----------------------------------------------------------------------------
 local addoncompare = function(a, b)
@@ -95,6 +120,7 @@ local eStats = CreateFrame("Frame")
 -- Register event
 -- -----------------------------------------------------------------------------
 eStats:RegisterEvent("PLAYER_MONEY")
+eStats:RegisterEvent("CHAT_MSG_CURRENCY")
 eStats:RegisterEvent("VARIABLES_LOADED")
 eStats:RegisterEvent("PLAYER_LOGIN")
 
@@ -106,6 +132,7 @@ eStats:SetScript("OnEvent", function(self, event, ...)
 
   if event == "VARIABLES_LOADED" then
 
+    -- create tables for the caracter if they don't exist
     if not eStatsDB then
       eStatsDB = {}
     end
@@ -117,10 +144,39 @@ eStats:SetScript("OnEvent", function(self, event, ...)
     if not eStatsDB[realmname][playername] then
       eStatsDB[realmname][playername] = {}
     end
+
+    if not eStatsDB[realmname][playername].Name then
+      eStatsDB[realmname][playername].Name = playername
+    end
           
   end
 
+  -- save the current currency info
   eStatsDB[realmname][playername].Money = GetMoney()
+  eStatsDB[realmname][playername].currentValor = select(2, GetCurrencyInfo(396))
+  eStatsDB[realmname][playername].weeklyValor = select(4, GetCurrencyInfo(396))
+
+  -- set to current time to know when you last logged out on this char
+  eStatsDB[realmname][playername].LastChange = time()
+
+  -- if the current weekly valor is 0 there is a chance 
+  -- that the weekly valor cap has been reset
+  if eStatsDB[realmname][playername].weeklyValor == 0 then
+
+    -- looping through all the saved character data
+    for k, entry in pairs(eStatsDB[realmname]) do
+
+      -- checks if the last change was before the last weeekly valor cap reset
+      if entry.LastChange and entry.LastChange < time()-timeSinceValorCapReset() then
+        
+        -- resets the weekly valor to 0
+        eStatsDB[realmname][entry.Name].weeklyValor = 0
+        
+      end -- if entry.LastChange and entry.LastChange < time()-timeSinceValorCapReset() then
+
+    end -- for k, entry in pairs(eStatsDB[realmname]) do
+
+  end -- if eStatsDB[realmname][playername].weeklyValor == 0 then
 
 end)
 
@@ -134,22 +190,15 @@ eStats:SetScript("OnUpdate", function(self, elapsed)
 
   if timer > 1 then
     -- gets the stats
-    currentTime = date("%H:%M:%S")
-    fps         = floor(GetFramerate())
-    ping        = select(3, GetNetStats())
+    local currentTime = date("%H:%M:%S")
+    local fps         = floor(GetFramerate())
+    local ping        = select(3, GetNetStats())
 
     -- build the money string
-    if GetMoney() >= 10000 then
-      money = FormatMoney(GetMoney(), "gold") .." ".. FormatMoney(GetMoney(), "silver") .." ".. FormatMoney(GetMoney(), "copper")
-    elseif GetMoney() >= 100 then
-      money = FormatMoney(GetMoney(), "silver") .." ".. FormatMoney(GetMoney(), "copper")
-    else
-      money = FormatMoney(GetMoney(), "copper")
-    end
+    local money = FormatMoney(GetMoney())
 
     -- get memory usage
-    memory = collectgarbage("count")
-    memory = memformat(memory)
+    local memory = memformat(collectgarbage("count"))
 
     -- set the clock text
     eStatsClockText:SetText(currentTime)
@@ -329,30 +378,30 @@ end)
 
 
 -- -----------------------------------------------------------------------------
--- Create money tooltip
+-- Create Currency tooltip
 -- -----------------------------------------------------------------------------
 eStatsMoney:SetScript("OnEnter", function(self, motion)
 
-  -- Acquire a tooltip with 2 columns, aligned to left and right
+  -- Acquire a tooltip with 4 columns, aligned to left, right, right, right
   local tooltip = LibQTip:Acquire("MoneyTooltip", 4, "LEFT", "RIGHT", "RIGHT", "RIGHT")
   self.tooltip = tooltip
 
   -- Add an header
-  tooltip:AddHeader("Character")
+  tooltip:AddHeader("Character", "Money", "Valor")
   tooltip:AddSeparator()
 
   -- reset totals to zero
-  total = 0
+  MoneyTotal = 0
 
   -- add the characters and their amounts
   for name, data in pairs(eStatsDB[realmname]) do
-    tooltip:AddLine(name, FormatMoney(data.Money, "gold"), FormatMoney(data.Money, "silver"), FormatMoney(data.Money, "copper"))
-    total = total + data.Money
+    tooltip:AddLine(name, FormatMoney(data.Money), FormatValor(data.currentValor, data.weeklyValor))
+    MoneyTotal = MoneyTotal + data.Money
   end
 
   -- add the totals
   tooltip:AddSeparator()
-  tooltip:AddLine("Total", FormatMoney(total, "gold"), FormatMoney(total, "silver"), FormatMoney(total, "copper"))
+  tooltip:AddLine("Total", FormatMoney(MoneyTotal))
 
   -- Use smart anchoring code to anchor the tooltip to our frame
   tooltip:SmartAnchorTo(self)
