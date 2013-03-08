@@ -4,7 +4,7 @@
 --
 --    Description:  Status texts like fps, ping, time etc.
 --
---        Version:  5.2.1
+--        Version:  5.2.2
 --        Created:  Mon Nov 02 16:47:25 CET 2009
 --       Revision:  none
 --
@@ -167,7 +167,7 @@ eStats:SetScript("OnEvent", function(self, event, ...)
     for k, entry in pairs(eStatsDB[realmname]) do
 
       -- checks if the last change was before the last weeekly valor cap reset
-      if entry.LastChange and entry.LastChange < time()-timeSinceValorCapReset() then
+      if entry.LastChange and entry.Name and entry.LastChange < time()-timeSinceValorCapReset() then
         
         -- resets the weekly valor to 0
         eStatsDB[realmname][entry.Name].weeklyValor = 0
