@@ -10,7 +10,7 @@
 --
 --         Author:  Mathias Jost (mail@mathiasjost.com)
 --					
---		   Edited:  Lars Thevißen
+--		   Edited by Lars Thevißen
 -- =============================================================================
 
 
@@ -48,17 +48,25 @@ end
 -- -----------------------------------------------------------------------------
 -- function intended to format a simple integer value into a currency string
 -- -----------------------------------------------------------------------------
-function FormatMoney(value, coin)
-  if coin == "gold" and value >= 10000 then
-    local gold = abs(value / 10000)
-    return format("|cff%s%s%d|r|cff%s%s|r", "ffffff", "", gold, "ffd700", "g")
-  elseif coin == "silver" and value >= 100 then
-    local silver = abs(mod((value / 100), 100))
-    return format("|cff%s%s%d|r|cff%s%s|r", "ffffff", "", silver, "c7c7cf", "s")
-  elseif coin == "copper" then
-    local copper = abs(mod(value, 100))
-    return format("|cff%s%s%d|r|cff%s%s|r", "ffffff", "", copper, "eda55f", "c")
+local function FormatMoney(value)
+  if value >= 10000 then
+    value = abs(value / 10000)
+    return format("|cff%s%s%d|r|cff%s%s|r", "ffffff", "", value, "ffd700", "g")
+  elseif value >= 100 then
+    value = abs(mod((value / 100), 100))
+    return format("|cff%s%s%d|r|cff%s%s|r", "ffffff", "", value, "c7c7cf", "s")
+  else
+    value = abs(mod(value, 100))
+    return format("|cff%s%s%d|r|cff%s%s|r", "ffffff", "", value, "eda55f", "c")
   end
+end
+
+
+-- -----------------------------------------------------------------------------
+-- function intended to format 2 integers into a formatted string
+-- -----------------------------------------------------------------------------
+local function FormatValor(current, weekly)
+  return format("%d (%d)", current, weekly)
 end
 
 
@@ -83,6 +91,24 @@ local cpuformat = function(number)
   else
     return string.format("%.f ms", number)
   end
+end
+
+
+-- -----------------------------------------------------------------------------
+-- returns the number of seconds since the last weekly valor cap reset
+-- -----------------------------------------------------------------------------
+local function timeSinceValorCapReset()
+  -- this array/table hekps us to calculate how 
+  -- many days it has been since the last reset
+  local daysSinceReset = { 4, 5, 6, 0, 1, 2, 3 }
+
+  -- calculates how many seconds have passed since midnight
+  local secondsSinceMidnight = date("%H") * 3600 + date("%M") * 60 + date("%S")
+
+  -- we take the days since the last reset and the seconds 
+  -- since midnight and add them up, then we substract 10800 
+  -- because the valor reset is at 3am, not at midnight
+  return daysSinceReset[date("%w")+1] * 86400 + secondsSinceMidnight - 10800
 end
 
 
@@ -128,9 +154,31 @@ eStats:SetScript("OnEvent", function(self, event, ...)
 
   end
 
-  eStatsDB[realmname][playername].Gold = GetMoney()
-  eStatsDB[realmname][playername].Valor = select(2, GetCurrencyInfo(396))
-  eStatsDB[realmname][playername].ValorWeek = select(4, GetCurrencyInfo(396))
+  eStatsDB[realmname][playername].Money = GetMoney()
+  eStatsDB[realmname][playername].currentValor = select(2, GetCurrencyInfo(396))
+  eStatsDB[realmname][playername].weeklyValor = select(4, GetCurrencyInfo(396))
+  
+  -- set to current time to know when you last logged out on this char
+  eStatsDB[realmname][playername].LastChange = time()
+  
+  -- if the current weekly valor is 0 there is a chance 
+  -- that the weekly valor cap has been reset
+  if eStatsDB[realmname][playername].weeklyValor == 0 then
+
+    -- looping through all the saved character data
+    for k, entry in pairs(eStatsDB[realmname]) do
+
+      -- checks if the last change was before the last weeekly valor cap reset
+      if entry.LastChange and entry.Name and entry.LastChange < time()-timeSinceValorCapReset() then
+        
+        -- resets the weekly valor to 0
+        eStatsDB[realmname][entry.Name].weeklyValor = 0
+        
+      end -- if entry.LastChange and entry.LastChange < time()-timeSinceValorCapReset() then
+
+    end -- for k, entry in pairs(eStatsDB[realmname]) do
+
+  end -- if eStatsDB[realmname][playername].weeklyValor == 0 then
 end)
 
 
@@ -186,7 +234,12 @@ eStatsClock:SetScript("OnMouseUp", function(self, btn)
 		GameTimeFrame:Click()
 	end
 end)
-
+eStatsClock:SetScript("OnEnter", function(self, motion)
+	eStatsClockText:SetTextColor(1, 0, 0)
+end)
+eStatsClock:SetScript("OnLeave", function(self, motion)
+	eStatsClockText:SetTextColor(1, 1, 1)
+end)
 -- -----------------------------------------------------------------------------
 -- Create Stats text frame
 -- -----------------------------------------------------------------------------
@@ -208,7 +261,7 @@ eStatsStatsText:SetTextColor(1, 1, 1)
 -- -----------------------------------------------------------------------------
 local eStatsMoney = CreateFrame("Button",  "eStatsMoney", UIParent)
 eStatsMoney:SetFrameLevel(3)
-eStatsMoney:SetWidth(100)
+eStatsMoney:SetWidth(50)
 eStatsMoney:SetHeight(15)
 eStatsMoney:SetPoint("BOTTOMRIGHT", -200, 0)
 eStatsMoney:Show()
@@ -220,16 +273,8 @@ eStatsMoneyText:SetTextColor(1, 1, 1)
 
 eStatsMoney:RegisterEvent("PLAYER_MONEY")
 eStatsMoney:RegisterEvent("PLAYER_LOGIN")
-eStatsMoney:SetScript("OnEvent", function(self, event, ...)
-	-- build the money string
-    if GetMoney() >= 10000 then
-      money = FormatMoney(GetMoney(), "gold") .." ".. FormatMoney(GetMoney(), "silver") .." ".. FormatMoney(GetMoney(), "copper")
-    elseif GetMoney() >= 100 then
-      money = FormatMoney(GetMoney(), "silver") .." ".. FormatMoney(GetMoney(), "copper")
-    else
-      money = FormatMoney(GetMoney(), "copper")
-    end
-	-- set the money text
+eStatsMoney:SetScript("OnEvent", function(self, event, ...)	
+    local money = FormatMoney(GetMoney())
     eStatsMoneyText:SetText(money)
 end)
 -- -----------------------------------------------------------------------------
@@ -379,7 +424,7 @@ end)
 
 
 -- -----------------------------------------------------------------------------
--- Create money tooltip
+-- Create Currency tooltip
 -- -----------------------------------------------------------------------------
 eStatsMoney:SetScript("OnEnter", function(self, motion)
 
@@ -388,21 +433,21 @@ eStatsMoney:SetScript("OnEnter", function(self, motion)
   self.tooltip = tooltip
 
   -- Add an header
-  tooltip:AddHeader("Character", "Gold", "Valor")
+  tooltip:AddHeader("Character", "Money", "Valor")
   tooltip:AddSeparator()
 
   -- reset totals to zero
-  total = 0
+  MoneyTotal = 0
 
   -- add the characters and their amounts
-  for name, player in pairs(eStatsDB[realmname]) do
-    tooltip:AddLine(name, FormatMoney(player.Gold, "gold"), player.Valor.."("..player.ValorWeek..")")
-    total = total + player.Gold
+  for name, data in pairs(eStatsDB[realmname]) do
+    tooltip:AddLine(name, FormatMoney(data.Money), FormatValor(data.currentValor, data.weeklyValor))
+    MoneyTotal = MoneyTotal + data.Money
   end
 
   -- add the totals
   tooltip:AddSeparator()
-  tooltip:AddLine("Total", FormatMoney(total, "gold"))
+  tooltip:AddLine("Total", FormatMoney(MoneyTotal))
 
   -- Use smart anchoring code to anchor the tooltip to our frame
   tooltip:SmartAnchorTo(self)
