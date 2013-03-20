@@ -169,7 +169,7 @@ eStats:SetScript("OnEvent", function(self, event, ...)
     for k, entry in pairs(eStatsDB[realmname]) do
 
       -- checks if the last change was before the last weeekly valor cap reset
-      if entry.LastChange and entry.Name and entry.LastChange < time()-timeSinceValorCapReset() then
+      if entry.LastChange and k and entry.LastChange < time()-timeSinceValorCapReset() then
         
         -- resets the weekly valor to 0
         eStatsDB[realmname][entry.Name].weeklyValor = 0
