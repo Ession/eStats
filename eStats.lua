@@ -4,7 +4,7 @@
 --
 --    Description:  Status texts like fps, ping, time etc.
 --
---        Version:  5.2.2
+--        Version:  5.2.3
 --        Created:  Mon Nov 02 16:47:25 CET 2009
 --       Revision:  none
 --
@@ -144,10 +144,6 @@ eStats:SetScript("OnEvent", function(self, event, ...)
     if not eStatsDB[realmname][playername] then
       eStatsDB[realmname][playername] = {}
     end
-
-    if not eStatsDB[realmname][playername].Name then
-      eStatsDB[realmname][playername].Name = playername
-    end
           
   end
 
@@ -164,17 +160,17 @@ eStats:SetScript("OnEvent", function(self, event, ...)
   if eStatsDB[realmname][playername].weeklyValor == 0 then
 
     -- looping through all the saved character data
-    for k, entry in pairs(eStatsDB[realmname]) do
+    for name, entry in pairs(eStatsDB[realmname]) do
 
       -- checks if the last change was before the last weeekly valor cap reset
-      if entry.LastChange and entry.Name and entry.LastChange < time()-timeSinceValorCapReset() then
+      if entry.LastChange and name and entry.LastChange < time()-timeSinceValorCapReset() then
         
         -- resets the weekly valor to 0
-        eStatsDB[realmname][entry.Name].weeklyValor = 0
+        eStatsDB[realmname][name].weeklyValor = 0
         
       end -- if entry.LastChange and entry.LastChange < time()-timeSinceValorCapReset() then
 
-    end -- for k, entry in pairs(eStatsDB[realmname]) do
+    end -- for name, entry in pairs(eStatsDB[realmname]) do
 
   end -- if eStatsDB[realmname][playername].weeklyValor == 0 then
 
