@@ -1,10 +1,11 @@
-## Interface: 50001
-## Version: 5.0.2
+## Interface: 50200
+## Version: 5.2.3
 ## Title: eStats
 ## Notes: Status texts like fps, ping, time etc.
-## Author: Ession
+## Author: Ession, Larth
 ## SavedVariables: eStatsDB
 
 LibStub.lua
 LibQTip-1.0.lua
 eStats.lua
+
