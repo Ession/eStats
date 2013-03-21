@@ -215,6 +215,53 @@ end)
 
 
 -- -----------------------------------------------------------------------------
+-- Create Spec frame
+-- -----------------------------------------------------------------------------
+local eStatsSpec = CreateFrame("Frame", "eStatsSpec", UIParent)
+eStatsSpec:SetFrameLevel(3)
+eStatsSpec:SetWidth(150)
+eStatsSpec:SetHeight(15)
+eStatsSpec:SetPoint("BOTTOMRIGHT", -250, 0)
+eStatsSpec:Show()
+
+eStatsSpecText = eStatsSpec:CreateFontString(nil, "OVERLAY")
+eStatsSpecText:SetPoint("CENTER")
+eStatsSpecText:SetFont("Interface\\AddOns\\eStats\\font.ttf", 14, "THINOUTLINE")
+eStatsSpecText:SetTextColor(1, 1, 1)
+
+eStatsSpec:SetScript("OnMouseUp", function(self, btn)
+	if btn == ("LeftButton") then
+		if GetActiveSpecGroup() == 1 then
+			SetActiveSpecGroup(2)
+		else
+			SetActiveSpecGroup(1)
+		end
+	end
+end)
+eStatsSpec:SetScript("OnEnter", function(self, motion)
+	eStatsSpecText:SetTextColor(1, 0, 0)
+	local tooltip = LibQTip:Acquire("SpecTooltip", 1)
+	-- self.tooltip = tooltip
+	-- tooltip:AddHeader("Skillung")
+	-- tooltip:SmartAnchorTo(self)
+	-- tooltip:Show()
+end)
+eStatsSpec:SetScript("OnLeave", function(self, motion)
+	eStatsSpecText:SetTextColor(1, 1, 1)
+end)
+
+eStatsSpec:RegisterEvent("PLAYER_LOGIN")
+eStatsSpec:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
+eStatsSpec:SetScript("OnEvent", function(self, event, ...)	
+    local currentSpec = GetSpecialization()
+	local currentSpecName = currentSpec and select(2, GetSpecializationInfo(currentSpec)) or "None"
+    eStatsSpecText:SetText(currentSpecName)
+end)
+
+
+
+
+-- -----------------------------------------------------------------------------
 -- Create Clock frame
 -- -----------------------------------------------------------------------------
 local eStatsClock = CreateFrame("Frame", "eStatsClock", UIParent)
