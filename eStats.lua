@@ -10,7 +10,7 @@
 --
 --         Author:  Mathias Jost (mail@mathiasjost.com)
 --					
---		   Edited by Lars Thevißen
+--		   Edited:	Lars Thevißen
 -- =============================================================================
 
 
@@ -333,7 +333,7 @@ if playerlevel < 90 then
 	eStatsExp:SetFrameLevel(3)
 	eStatsExp:SetWidth(100)
 	eStatsExp:SetHeight(15)
-	eStatsExp:SetPoint("BOTTOMRIGHT", -300, 0)
+	eStatsExp:SetPoint("BOTTOMLEFT", 5, 0)
 	eStatsExp:Show()
 
 	eStatsExpText = eStatsExp:CreateFontString(nil, "OVERLAY")
@@ -344,16 +344,12 @@ if playerlevel < 90 then
 	eStatsExp:RegisterEvent("PLAYER_XP_UPDATE")
 	eStatsExp:RegisterEvent("PLAYER_LOGIN")
 
-eStatsExp:SetScript("OnEvent", function(self, event, ...)
-	-- if playerlevel == 90 then
-		-- eStatsExp:Hide()	
-	-- else
-		playerxp = UnitXP("player")
-		playermaxxp	= UnitXPMax("player")
-		xppercent = round(100*playerxp/playermaxxp, 2)
-		eStatsExpText:SetText(xppercent.."%")
-	-- end
-end)
+	eStatsExp:SetScript("OnEvent", function(self, event, ...)
+			playerxp = UnitXP("player")
+			playermaxxp	= UnitXPMax("player")
+			xppercent = round(100*playerxp/playermaxxp, 2)
+			eStatsExpText:SetText(xppercent.."%")
+	end)
 end
 
 

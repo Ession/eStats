@@ -1,5 +1,5 @@
 ## Interface: 50200
-## Version: 5.2.3
+## Version: 5.2.3a
 ## Title: eStats
 ## Notes: Status texts like fps, ping, time etc.
 ## Author: Ession, Larth
