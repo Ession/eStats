@@ -14,6 +14,38 @@
 
 
 -- -----------------------------------------------------------------------------
+-- Make the Lua globals local
+-- -----------------------------------------------------------------------------
+local _G = getfenv(0)
+
+-- Functions
+local pairs = _G.pairs
+local type = _G.type
+local abs = _G.abs
+local floor = _G.floor
+local mod = _G.mod
+local format = _G.format
+local date = _G.date
+local time = _G.time
+local select = _G.select
+local collectgarbage = _G.collectgarbage
+local UpdateAddOnMemoryUsage = _G.UpdateAddOnMemoryUsage
+local UpdateAddOnCPUUsage = _G.UpdateAddOnCPUUsage
+local GetNumAddOns = _G.GetNumAddOns
+local GetAddOnInfo = _G.GetAddOnInfo
+local GetAddOnMemoryUsage = _G.GetAddOnMemoryUsage
+local GetAddOnCPUUsage = _G.GetAddOnCPUUsage
+local GetFramerate = _G.GetFramerate
+local GetNetStats = _G.GetNetStats
+local GetCurrencyInfo = _G.GetCurrencyInfo
+local GetMoney = _G.GetMoney
+
+-- Libraries
+local string = _G.string
+local table = _G.table
+
+
+-- -----------------------------------------------------------------------------
 -- Get a reference to the library
 -- -----------------------------------------------------------------------------
 local LibQTip = LibStub('LibQTip-1.0')
@@ -30,6 +62,10 @@ local memtotal
 local cputotal
 local nr
 local cpu
+local eStatsClockText
+local eStatsStatsText
+local eStatsMoneyText
+local MoneyTotal
 local playername    = UnitName("player")
 local realmname     = GetRealmName()
 local scriptProfile = GetCVar("scriptProfile")
