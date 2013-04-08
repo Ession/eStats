@@ -218,6 +218,8 @@ end)
 -- Create Spec frame
 -- -----------------------------------------------------------------------------
 local eStatsSpec = CreateFrame("Frame", "eStatsSpec", UIParent)
+--local count = GetNumEquipmentSets()
+--name, icon, setID, isEquipped, numItems, numEquipped, numInventory, numMissing, numIgnored = GetEquipmentSetInfo(index)
 eStatsSpec:SetFrameLevel(3)
 eStatsSpec:SetWidth(150)
 eStatsSpec:SetHeight(15)
@@ -238,13 +240,32 @@ eStatsSpec:SetScript("OnMouseUp", function(self, btn)
 		end
 	end
 end)
+
+local function dasGear(name)
+	UseEquipmentSet(name["_OnMouseUp_arg"])
+end
 eStatsSpec:SetScript("OnEnter", function(self, motion)
-	eStatsSpecText:SetTextColor(1, 0, 0)
+	if LibQTip:IsAcquired("SpecTooltip") then
+		LibQTip:Release(self.tooltip)
+	end
 	local tooltip = LibQTip:Acquire("SpecTooltip", 1)
-	-- self.tooltip = tooltip
-	-- tooltip:AddHeader("Skillung")
-	-- tooltip:SmartAnchorTo(self)
-	-- tooltip:Show()
+	local layout = PitBull4.Options.GetCurrentLayout()
+	self.tooltip = tooltip
+	tooltip:AddHeader("Name")
+	tooltip:AddSeparator()
+	for i=1, GetNumEquipmentSets(), 1 do 
+		-- local name = select(1, GetEquipmentSetInfo(i))
+		local name, _, setID, isEquipped, _, _, _, numMissing, _ = GetEquipmentSetInfo(i)
+		tooltip:AddLine(name)
+		if isEquipped then tooltip:SetLineTextColor(i+2, 0, 1, 0) end
+		if numMissing > 0 then tooltip:SetLineTextColor(i+2, 1, 0, 0) end
+		
+		tooltip:SetCellScript(i+2, 1, "OnMouseUp", dasGear, name)
+	end
+	tooltip:SmartAnchorTo(self)
+	tooltip:SetAutoHideDelay(0.25, self)
+
+    tooltip:Show()
 end)
 eStatsSpec:SetScript("OnLeave", function(self, motion)
 	eStatsSpecText:SetTextColor(1, 1, 1)
@@ -257,9 +278,6 @@ eStatsSpec:SetScript("OnEvent", function(self, event, ...)
 	local currentSpecName = currentSpec and select(2, GetSpecializationInfo(currentSpec)) or "None"
     eStatsSpecText:SetText(currentSpecName)
 end)
-
-
-
 
 -- -----------------------------------------------------------------------------
 -- Create Clock frame
@@ -374,6 +392,7 @@ eStatsStats:SetScript("OnEnter", function(self, motion)
     -- Acquire a tooltip with 2 columns, aligned to left and right
     local tooltip = LibQTip:Acquire("MoneyTooltip", 3, "LEFT", "RIGHT", "RIGHT")
     self.tooltip  = tooltip
+            
 
     -- Add header
     tooltip:AddHeader("Name", "Memory", "CPU")
