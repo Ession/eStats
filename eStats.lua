@@ -89,14 +89,6 @@ end
 
 
 -- -----------------------------------------------------------------------------
--- function intended to format 2 integers into a formatted string
--- -----------------------------------------------------------------------------
-local function FormatValor(current, weekly)
-  return format("%d (%d)", current, weekly)
-end
-
-
--- -----------------------------------------------------------------------------
 -- format memory usage
 -- -----------------------------------------------------------------------------
 local memformat = function(number)
@@ -117,24 +109,6 @@ local cpuformat = function(number)
   else
     return string.format("%.f ms", number)
   end
-end
-
-
--- -----------------------------------------------------------------------------
--- returns the number of seconds since the last weekly valor cap reset
--- -----------------------------------------------------------------------------
-local function timeSinceValorCapReset()
-  -- this array/table hekps us to calculate how 
-  -- many days it has been since the last reset
-  local daysSinceReset = { 4, 5, 6, 0, 1, 2, 3 }
-
-  -- calculates how many seconds have passed since midnight
-  local secondsSinceMidnight = date("%H") * 3600 + date("%M") * 60 + date("%S")
-
-  -- we take the days since the last reset and the seconds 
-  -- since midnight and add them up, then we substract 10800 
-  -- because the valor reset is at 3am, not at midnight
-  return daysSinceReset[date("%w")+1] * 86400 + secondsSinceMidnight - 10800
 end
 
 
@@ -185,30 +159,9 @@ eStats:SetScript("OnEvent", function(self, event, ...)
 
   -- save the current currency info
   eStatsDB[realmname][playername].Money = GetMoney()
-  eStatsDB[realmname][playername].currentValor = select(2, GetCurrencyInfo(396))
-  eStatsDB[realmname][playername].weeklyValor = select(4, GetCurrencyInfo(396))
 
   -- set to current time to know when you last logged out on this char
   eStatsDB[realmname][playername].LastChange = time()
-
-  -- if the current weekly valor is 0 there is a chance 
-  -- that the weekly valor cap has been reset
-  if eStatsDB[realmname][playername].weeklyValor == 0 then
-
-    -- looping through all the saved character data
-    for name, entry in pairs(eStatsDB[realmname]) do
-
-      -- checks if the last change was before the last weeekly valor cap reset
-      if entry.LastChange and name and entry.LastChange < time()-timeSinceValorCapReset() then
-        
-        -- resets the weekly valor to 0
-        eStatsDB[realmname][name].weeklyValor = 0
-        
-      end -- if entry.LastChange and entry.LastChange < time()-timeSinceValorCapReset() then
-
-    end -- for name, entry in pairs(eStatsDB[realmname]) do
-
-  end -- if eStatsDB[realmname][playername].weeklyValor == 0 then
 
 end)
 
@@ -415,11 +368,11 @@ end)
 eStatsMoney:SetScript("OnEnter", function(self, motion)
 
   -- Acquire a tooltip with 4 columns, aligned to left, right, right, right
-  local tooltip = LibQTip:Acquire("MoneyTooltip", 4, "LEFT", "RIGHT", "RIGHT", "RIGHT")
+  local tooltip = LibQTip:Acquire("MoneyTooltip", 2, "LEFT", "RIGHT")
   self.tooltip = tooltip
 
   -- Add an header
-  tooltip:AddHeader("Character", "Money", "Valor")
+  tooltip:AddHeader("Character", "Money")
   tooltip:AddSeparator()
 
   -- reset totals to zero
@@ -427,7 +380,7 @@ eStatsMoney:SetScript("OnEnter", function(self, motion)
 
   -- add the characters and their amounts
   for name, data in pairs(eStatsDB[realmname]) do
-    tooltip:AddLine(name, FormatMoney(data.Money), FormatValor(data.currentValor, data.weeklyValor))
+    tooltip:AddLine(name, FormatMoney(data.Money))
     MoneyTotal = MoneyTotal + data.Money
   end
 
