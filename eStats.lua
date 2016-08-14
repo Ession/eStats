@@ -4,7 +4,7 @@
 --
 --    Description:  Status texts like fps, ping, time etc.
 --
---        Version:  6.2.1
+--        Version:  7.0.1
 --        Created:  Mon Nov 02 16:47:25 CET 2009
 --       Revision:  none
 --
