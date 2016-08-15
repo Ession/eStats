@@ -204,11 +204,15 @@ end)
 -- -----------------------------------------------------------------------------
 -- Create Clock frame
 -- -----------------------------------------------------------------------------
-local eStatsClock = CreateFrame("Frame", "eStatsClock", UIParent)
+local eStatsClock = CreateFrame("Frame", "eStatsClock", ebfMinimapP1 or UIParent)
 eStatsClock:SetFrameLevel(3)
 eStatsClock:SetWidth(75)
 eStatsClock:SetHeight(30)
-eStatsClock:SetPoint("TOPLEFT", 16, -156)
+if ebfMinimapP1 then
+	eStatsClock:SetPoint("CENTER")
+else
+	eStatsClock:SetPoint("TOPLEFT", 16, -156)
+end
 eStatsClock:Show()
 
 eStatsClockText = eStatsClock:CreateFontString(nil, "OVERLAY")
@@ -218,35 +222,43 @@ eStatsClockText:SetTextColor(1, 1, 1)
 
 
 -- -----------------------------------------------------------------------------
--- Create Stats text frame
--- -----------------------------------------------------------------------------
-local eStatsStats = CreateFrame("Button",  "eStatsStats", UIParent)
-eStatsStats:SetFrameLevel(3)
-eStatsStats:SetWidth(150)
-eStatsStats:SetHeight(30)
-eStatsStats:SetPoint("TOPLEFT", 16, -186)
-eStatsStats:Show()
-
-eStatsStatsText = eStatsStats:CreateFontString(nil, "OVERLAY")
-eStatsStatsText:SetPoint("CENTER")
-eStatsStatsText:SetFont("Interface\\AddOns\\eStats\\font.ttf", 14)
-eStatsStatsText:SetTextColor(1, 1, 1)
-
-
--- -----------------------------------------------------------------------------
 -- Create Money text frame
 -- -----------------------------------------------------------------------------
-local eStatsMoney = CreateFrame("Button",  "eStatsMoney", UIParent)
+local eStatsMoney = CreateFrame("Button",  "eStatsMoney", ebfMinimapP2 or UIParent)
 eStatsMoney:SetFrameLevel(3)
 eStatsMoney:SetWidth(75)
 eStatsMoney:SetHeight(30)
-eStatsMoney:SetPoint("TOPLEFT", 91, -156)
+if ebfMinimapP2 then
+	eStatsMoney:SetPoint("CENTER")
+else
+	eStatsMoney:SetPoint("TOPLEFT", 91, -156)
+end
 eStatsMoney:Show()
 
 eStatsMoneyText = eStatsMoney:CreateFontString(nil, "OVERLAY")
 eStatsMoneyText:SetPoint("CENTER")
 eStatsMoneyText:SetFont("Interface\\AddOns\\eStats\\font.ttf", 14)
 eStatsMoneyText:SetTextColor(1, 1, 1)
+
+
+-- -----------------------------------------------------------------------------
+-- Create Stats text frame
+-- -----------------------------------------------------------------------------
+local eStatsStats = CreateFrame("Button", "eStatsStats", ebfMinimapP3 or UIParent)
+eStatsStats:SetFrameLevel(3)
+eStatsStats:SetWidth(150)
+eStatsStats:SetHeight(30)
+if ebfMinimapP3 then
+	eStatsStats:SetPoint("TOPLEFT")
+else
+	eStatsStats:SetPoint("TOPLEFT", 16, -186)
+end
+eStatsStats:Show()
+
+eStatsStatsText = eStatsStats:CreateFontString(nil, "OVERLAY")
+eStatsStatsText:SetPoint("CENTER")
+eStatsStatsText:SetFont("Interface\\AddOns\\eStats\\font.ttf", 14)
+eStatsStatsText:SetTextColor(1, 1, 1)
 
 
 -- -----------------------------------------------------------------------------
